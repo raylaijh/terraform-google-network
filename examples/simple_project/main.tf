@@ -16,6 +16,7 @@
 
 provider "google" {
   version = "~> 3.3.0"
+  credentials = var.secret
 }
 
 provider "null" {
