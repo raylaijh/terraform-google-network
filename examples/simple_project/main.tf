@@ -29,6 +29,10 @@ locals {
   subnet_03 = "${var.network_name}-subnet-03"
 }
 
+variable "secret" {
+    default = []
+}
+
 module "test-vpc-module" {
   source       = "../../"
   project_id   = var.project_id
