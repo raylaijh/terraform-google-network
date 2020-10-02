@@ -14,38 +14,51 @@
  * limitations under the License.
  */
 
-/******************************************
-	VPC configuration
- *****************************************/
-module "vpc" {
-  source                                 = "./modules/vpc"
-  network_name                           = var.network_name
-  auto_create_subnetworks                = var.auto_create_subnetworks
-  routing_mode                           = var.routing_mode
-  project_id                             = var.project_id
-  description                            = var.description
-  shared_vpc_host                        = var.shared_vpc_host
-  delete_default_internet_gateway_routes = var.delete_default_internet_gateway_routes
+provider "google" {
+  version = "~> 3.3.0"
+  credentials = var.secret
 }
 
-/******************************************
-	Subnet configuration
- *****************************************/
-module "subnets" {
-  source           = "./modules/subnets"
-  project_id       = var.project_id
-  network_name     = module.vpc.network_name
-  subnets          = var.subnets
-  secondary_ranges = var.secondary_ranges
+provider "null" {
+  version = "~> 2.1"
 }
 
-/******************************************
-	Routes
- *****************************************/
-module "routes" {
-  source            = "./modules/routes"
-  project_id        = var.project_id
-  network_name      = module.vpc.network_name
-  routes            = var.routes
-  module_depends_on = [module.subnets.subnets]
+locals {
+  subnet_01 = "${var.network_name}-subnet-01"
+  subnet_02 = "${var.network_name}-subnet-02"
+  subnet_03 = "${var.network_name}-subnet-03"
+}
+
+variable "secret" {
+    default = []
+}
+
+module "test-vpc-module" {
+  source       = "../../"
+  project_id   = var.project_id
+  network_name = var.network_name
+
+  subnets = [
+    {
+      subnet_name   = "${local.subnet_01}"
+      subnet_ip     = "10.10.10.0/24"
+      subnet_region = "us-west1"
+    },
+    {
+      subnet_name           = "${local.subnet_02}"
+      subnet_ip             = "10.10.20.0/24"
+      subnet_region         = "us-west1"
+      subnet_private_access = "true"
+      subnet_flow_logs      = "true"
+    },
+    {
+      subnet_name               = "${local.subnet_03}"
+      subnet_ip                 = "10.10.30.0/24"
+      subnet_region             = "us-west1"
+      subnet_flow_logs          = "true"
+      subnet_flow_logs_interval = "INTERVAL_10_MIN"
+      subnet_flow_logs_sampling = 0.7
+      subnet_flow_logs_metadata = "INCLUDE_ALL_METADATA"
+    }
+  ]
 }
